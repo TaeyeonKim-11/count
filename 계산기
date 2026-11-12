@@ -1,0 +1,73 @@
+function calculate() {
+    let expression = document.calc.display.value;
+
+    try {
+        let tokens = expression.match(
+            /\d+\.?\d*|[+\-*/()]|\.\d+/g
+        );
+
+        if (!tokens || tokens.join("") !== expression) {
+            throw new Error();
+        }
+
+        let index = 0;
+
+        function factor() {
+            if (tokens[index] === "(") {
+                index++;
+                let value = sum();
+                if (tokens[index] !== ")") throw new Error();
+                index++;
+                return value;
+            }
+
+            if (tokens[index] === "-") {
+                index++;
+                return -factor();
+            }
+
+            let value = Number(tokens[index++]);
+            if (!Number.isFinite(value)) throw new Error();
+            return value;
+        }
+
+        function term() {
+            let value = factor();
+
+            while (tokens[index] === "*" ||
+                   tokens[index] === "/") {
+                let op = tokens[index++];
+                let next = factor();
+
+                value = op === "*" ? value * next : value / next;
+            }
+
+            return value;
+        }
+
+        function sum() {
+            let value = term();
+
+            while (tokens[index] === "+" ||
+                   tokens[index] === "-") {
+                let op = tokens[index++];
+                let next = term();
+
+                value = op === "+" ? value + next : value - next;
+            }
+
+            return value;
+        }
+
+        let result = sum();
+
+        if (index !== tokens.length || !Number.isFinite(result)) {
+            throw new Error();
+        }
+
+        document.calc.display.value = result;
+
+    } catch (error) {
+        document.calc.display.value = "Error";
+    }
+}
